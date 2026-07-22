@@ -47,8 +47,8 @@ Auto-Research 是一个**领域无关的自主科研循环 Skill**，设计为 A
 
 ```bash
 # 1. 克隆仓库
-git clone https://github.com/Yuweiwei1001/-auto-research.git
-cd -auto-research
+git clone https://github.com/Yuweiwei1001/auto-research.git
+cd auto-research
 
 # 2. 将 Skill 文件复制到你的项目中
 # 方式 A：作为子目录
@@ -306,7 +306,7 @@ auto-research/
   title = {Auto-Research: Universal Autonomous Research Loop},
   author = {Your Name},
   year = {2026},
-  url = {https://github.com/Yuweiwei1001/-auto-research}
+  url = {https://github.com/Yuweiwei1001/auto-research}
 }
 ```
 
