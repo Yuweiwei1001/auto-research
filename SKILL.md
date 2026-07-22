@@ -287,3 +287,4 @@ experiment_runner:
 - `references/verifier-agent-template.md` — 验证 Agent prompt 模板
 - `references/data-formats.md` — JSON/YAML 格式定义
 - `references/decision-rules.md` — 决策规则详表（含预算熔断规则）
+- `references/paper-finder.md` — 论文检索子技能（Semantic Scholar API + 多角度搜索 + 知识库）
