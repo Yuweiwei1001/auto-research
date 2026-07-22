@@ -188,12 +188,13 @@ When invoked from the auto-research loop (Phase 1):
 4. **Ask**: Whether user wants deeper analysis of any specific papers
 5. **Connect**: If running within auto-research, map findings to actionable hypotheses
 
-## 结果输出（必须）
+## 结果输出
 
-每次调用完成后，必须在项目根目录 `outputs/` 下生成结果文件：
+当产出实质性调研报告时，输出到项目根目录 `outputs/`：
 
 - **路径**：`outputs/{YYYYMMDD}_paper-finder_{slug}.md`
 - **slug**：从搜索主题派生的 kebab-case 短标识
+- **无需输出文件的场景**：单篇论文快速查找、简单问答
 
 ### 调研报告输出格式
 
