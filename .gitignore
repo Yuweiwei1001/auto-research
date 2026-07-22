@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Experiment outputs (user-specific, not part of the skill)
+experiments/results/
+experiments/decisions/
+experiments/experiment_log.jsonl
+experiments/experiment_master.csv
+experiments/work_log.md
+experiments/loop_contract.md
+experiments/method_lineage.yaml
+experiments/research_domain.yaml
+
+# Logs
+*.log

@@ -1,0 +1,123 @@
+# 示例：多模态联邦学习研究
+# 展示如何用 auto-research 驱动联邦学习实验
+
+domain:
+  name: "多模态联邦学习-模态缺失补偿"
+  description: "在物联网环境下，研究多模态联邦学习中模态缺失的有效补偿方法"
+  target_metric: "final5_avg"
+  target_value: 0.8267
+  confidence_threshold: 0.01
+
+decision_thresholds:
+  upgrade_threshold: 0.01
+  stagnation_threshold: 0.005
+  neutral_threshold: 0.003
+
+key_variables:
+  - name: missing_modality_ratio
+    values: [0.1, 0.3, 0.5, 0.7]
+    description: "模态缺失率"
+    config_path: "dataset.missing_modality_ratio"
+  - name: non_iid_alpha
+    values: [0.1, 0.5, 1.0]
+    description: "Non-IID 程度 (Dirichlet alpha)"
+    config_path: "dataset.non_iid_alpha"
+  - name: num_clients
+    values: [5, 10, 20]
+    description: "客户端数量"
+    config_path: "dataset.num_clients"
+
+experiment_tiers:
+  quick_screen:
+    num_rounds: 50
+    local_epochs: 5
+    timeout_minutes: 30
+    description: "快速筛选 - 50轮判断方向"
+  deep_verify:
+    num_rounds: 100
+    local_epochs: 5
+    timeout_minutes: 60
+    description: "深度验证 - 100轮充分验证"
+  full_run:
+    num_rounds: 200
+    local_epochs: 5
+    timeout_minutes: 120
+    description: "完整运行 - 200轮最终验证"
+
+baselines:
+  - method: FedAvg
+    config: configs/fedavg.yaml
+    script: scripts/run_fedavg.py
+    metrics:
+      final5_avg: 0.7887
+    source: "本地实测 200r (seed=42)"
+  - method: MMO-FL
+    config: configs/mmofl.yaml
+    script: scripts/run_mmofl.py
+    metrics:
+      final5_avg: 0.8267
+    source: "本地实测 200r (seed=42)"
+
+methods:
+  fedavg:
+    script: scripts/run_fedavg.py
+    config: configs/fedavg.yaml
+  mmofl:
+    script: scripts/run_mmofl.py
+    config: configs/mmofl.yaml
+  proposed:
+    script: scripts/run_proposed.py
+    config: configs/proposed.yaml
+
+budget:
+  max_experiments_per_batch: 15
+  max_hours_per_batch: 8
+  max_total_experiments: 200
+  max_consecutive_failures: 2
+  cooldown_after_regression: 1
+  cooldown_experiment_cap: 5
+
+loop:
+  mode: open
+  auto_continue: true
+  trigger: manual
+  open_slot_ratio: 0.2
+
+experiment_runner:
+  env_setup: "conda activate flower"
+  run_command: "python scripts/run_experiment.py --exp-id {exp_id} --method {method} --rounds {rounds} --seed {seed} --override {overrides}"
+  result_path: "experiments/results/{exp_id}.json"
+  log_path: "experiments/results/{exp_id}.log"
+  result_parser: "json"
+  parallelism: "serial"    # 单 GPU (RTX 5070 Ti Laptop)
+  timeout:
+    quick_screen: 30
+    deep_verify: 60
+    full_run: 120
+
+literature_references:
+  - title: MFCPL
+    authors: "Le et al."
+    venue: "Information Fusion 2025"
+    key_technique: "跨模态完整原型对齐"
+  - title: PEPSY
+    authors: "Nguyen et al."
+    venue: "NeurIPS 2025"
+    key_technique: "可重构表示 + 数据缺失画像嵌入"
+    code_url: "https://github.com/nmduonggg/PEPSY"
+  - title: FedMobile
+    authors: "Liu et al."
+    venue: "ACM WWW 2025"
+    key_technique: "知识蒸馏驱动的跨节点模态重建"
+
+innovation_sources:
+  priority:
+    - level: 1
+      name: "本地资源"
+      sources: ["DEEP_RESEARCH_*.md", "docs/pdf_output/", "paper/文献/"]
+    - level: 2
+      name: "网络搜索"
+      sources: ["NeurIPS", "ICML", "WWW", "TMC", "Information Fusion"]
+    - level: 3
+      name: "交叉融合"
+      sources: ["PEPSY可重构嵌入 + MFCPL原型对齐", "CorrKD蒸馏 + FedMobile知识补充"]

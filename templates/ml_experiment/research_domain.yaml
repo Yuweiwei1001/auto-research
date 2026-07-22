@@ -1,0 +1,105 @@
+# 机器学习实验领域配置模板
+# 适用于：深度学习、联邦学习、强化学习等需要训练-评估循环的研究
+# 复制此文件到你的项目 experiments/research_domain.yaml 并按需修改
+
+domain:
+  name: "你的ML研究方向"
+  description: "一句话描述研究问题"
+  target_metric: "accuracy"              # 可选: accuracy, f1, auc, rmse, mae, reward 等
+  target_value: 0.90                      # 目标值
+  confidence_threshold: 0.01              # std < 1% 视为稳定
+
+decision_thresholds:
+  upgrade_threshold: 0.01
+  stagnation_threshold: 0.005
+  neutral_threshold: 0.003
+
+key_variables:
+  - name: learning_rate
+    values: [0.001, 0.01, 0.1]
+    description: "学习率"
+    config_path: "training.learning_rate"
+  - name: batch_size
+    values: [16, 32, 64, 128]
+    description: "批大小"
+    config_path: "training.batch_size"
+  - name: num_epochs
+    values: [50, 100, 200]
+    description: "训练轮数"
+    config_path: "training.num_epochs"
+
+experiment_tiers:
+  quick_screen:
+    num_epochs: 50
+    timeout_minutes: 30
+    description: "快速筛选 - 50 epochs 判断方向"
+  deep_verify:
+    num_epochs: 100
+    timeout_minutes: 60
+    description: "深度验证 - 100 epochs 充分验证"
+  full_run:
+    num_epochs: 200
+    timeout_minutes: 120
+    description: "完整运行 - 200 epochs 最终验证"
+
+baselines:
+  - method: Baseline
+    config: configs/baseline.yaml
+    script: scripts/run_baseline.py
+    metrics:
+      accuracy: 0.85
+      f1: 0.83
+    source: "本地实测 (seed=42)"
+
+methods:
+  baseline:
+    script: scripts/run_baseline.py
+    config: configs/baseline.yaml
+  proposed:
+    script: scripts/run_proposed.py
+    config: configs/proposed.yaml
+
+budget:
+  max_experiments_per_batch: 15
+  max_hours_per_batch: 8
+  max_total_experiments: 200
+  max_consecutive_failures: 2
+  cooldown_after_regression: 1
+  cooldown_experiment_cap: 5
+
+loop:
+  mode: closed
+  auto_continue: false
+  trigger: manual
+  open_slot_ratio: 0.2
+
+experiment_runner:
+  env_setup: "conda activate ml_env"
+  run_command: "python scripts/run_experiment.py --exp-id {exp_id} --method {method} --epochs {rounds} --seed {seed} --override {overrides}"
+  result_path: "experiments/results/{exp_id}.json"
+  log_path: "experiments/results/{exp_id}.log"
+  result_parser: "json"
+  parallelism: "serial"    # 单 GPU 串行；多 GPU 可改为 "parallel:4"
+  timeout:
+    quick_screen: 30
+    deep_verify: 60
+    full_run: 120
+
+literature_references:
+  - title: "相关论文1"
+    authors: "作者"
+    venue: "NeurIPS 2025"
+    key_technique: "核心技术"
+    code_url: "https://github.com/..."
+
+innovation_sources:
+  priority:
+    - level: 1
+      name: "本地资源"
+      sources: ["DEEP_RESEARCH_*.md", "docs/pdf_output/"]
+    - level: 2
+      name: "网络搜索"
+      sources: ["NeurIPS", "ICML", "ICLR", "CVPR", "ACL"]
+    - level: 3
+      name: "交叉融合"
+      sources: ["跨论文模块组合", "跨领域迁移"]

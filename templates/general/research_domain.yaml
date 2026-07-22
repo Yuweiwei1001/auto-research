@@ -1,0 +1,142 @@
+# 通用研究领域配置模板
+# 复制此文件到你的项目 experiments/research_domain.yaml 并按需修改
+# 适用于：任何可量化指标的实证研究
+
+domain:
+  name: "你的研究领域名称"
+  description: "一句话描述你的研究问题"
+  target_metric: "primary_metric_name"    # 主指标名（如 accuracy, f1, rmse, yield）
+  target_value: 0.90                       # 目标值（超过此值视为成功）
+  confidence_threshold: 0.01               # std < 此值视为稳定
+
+# 决策阈值（可选，有默认值）
+decision_thresholds:
+  upgrade_threshold: 0.01       # 提升 ≥ 此值视为 improvement
+  stagnation_threshold: 0.005   # 提升 < 此值视为停滞
+  neutral_threshold: 0.003      # 差异 < 此值视为 neutral
+
+# 关键实验变量（用于扩展验证）
+key_variables:
+  - name: variable_1
+    values: [value_a, value_b, value_c]
+    description: "变量1描述"
+    config_path: "path.to.config.param"  # 在实验配置中的路径
+  - name: variable_2
+    values: [value_x, value_y]
+    description: "变量2描述"
+    config_path: "path.to.config.param"
+
+# 实验层级定义
+experiment_tiers:
+  quick_screen:
+    # 根据领域自定义参数
+    duration: "short"           # 简短描述
+    timeout_minutes: 30
+    description: "快速筛选 - 判断方向是否有搞头"
+  deep_verify:
+    duration: "medium"
+    timeout_minutes: 60
+    description: "深度验证 - 充分验证有希望的方向"
+  full_run:
+    duration: "long"
+    timeout_minutes: 120
+    description: "完整运行 - 最终验证"
+
+# 基线方法
+baselines:
+  - method: Baseline-A
+    config: configs/baseline_a.yaml
+    script: scripts/run_baseline_a.py
+    metrics:
+      primary_metric_name: 0.80
+    source: "本地实测 / 论文声称（需复现验证）"
+  - method: Baseline-B
+    config: configs/baseline_b.yaml
+    script: scripts/run_baseline_b.py
+    metrics:
+      primary_metric_name: 0.85
+    source: "本地实测"
+
+# 可用方法注册
+methods:
+  baseline_a:
+    script: scripts/run_baseline_a.py
+    config: configs/baseline_a.yaml
+  baseline_b:
+    script: scripts/run_baseline_b.py
+    config: configs/baseline_b.yaml
+  proposed:
+    script: scripts/run_proposed.py
+    config: configs/proposed.yaml
+
+# 预算配置
+budget:
+  max_experiments_per_batch: 15
+  max_hours_per_batch: 8
+  max_total_experiments: 200
+  max_consecutive_failures: 2
+  cooldown_after_regression: 1
+  cooldown_experiment_cap: 5
+
+# 循环模式配置
+loop:
+  mode: closed              # closed = 严格指标门控 / open = 允许探索性实验
+  auto_continue: false       # 是否自动启动下一批次
+  trigger: manual            # manual / cron / event
+  cron_schedule: null        # 如 "0 3 * * *" 表示每天凌晨3点
+  open_slot_ratio: 0.2       # open 模式下 wild card 比例
+
+# 实验适配器（核心：定义如何运行实验）
+experiment_runner:
+  # 环境准备命令（每次实验前执行，留空则跳过）
+  env_setup: ""  # 例: "conda activate myenv" 或 "source venv/bin/activate"
+  
+  # 实验运行命令模板
+  # 可用占位符: {exp_id}, {method}, {rounds}, {seed}, {overrides}, {config}, {script}
+  run_command: "python scripts/run_experiment.py --exp-id {exp_id} --method {method} --seed {seed} --override {overrides}"
+  
+  # 结果文件路径模板
+  result_path: "experiments/results/{exp_id}.json"
+  log_path: "experiments/results/{exp_id}.log"
+  
+  # 结果解析方式: json / csv / regex / custom
+  result_parser: "json"
+  
+  # 并行策略: serial / parallel:N
+  parallelism: "serial"
+  
+  # 超时配置（分钟）
+  timeout:
+    quick_screen: 30
+    deep_verify: 60
+    full_run: 120
+
+# 文献参考
+literature_references:
+  - title: "论文标题"
+    authors: "作者"
+    venue: "发表会议/期刊 年份"
+    experiment_setup: "实验设置描述"
+    key_technique: "核心技术"
+    code_url: null
+    local_file: null
+
+# 创新来源优先级
+innovation_sources:
+  description: "创新点来源优先级"
+  priority:
+    - level: 1
+      name: "本地资源 (最快)"
+      sources:
+        - "DEEP_RESEARCH_*.md (deep research 报告)"
+        - "docs/ (论文笔记)"
+    - level: 2
+      name: "网络搜索 (补充)"
+      sources:
+        - "搜索与当前瓶颈相关的最新论文"
+        - "关注顶会/顶刊: （填写你的领域顶会）"
+    - level: 3
+      name: "交叉融合 (深层)"
+      sources:
+        - "将不同论文的技术模块进行组合"
+        - "跨领域方法迁移"

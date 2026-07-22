@@ -1,0 +1,115 @@
+# NLP 基准测试领域配置模板
+# 适用于：文本分类、情感分析、NER、问答系统等 NLP 任务
+# 复制此文件到你的项目 experiments/research_domain.yaml 并按需修改
+
+domain:
+  name: "你的NLP研究方向"
+  description: "一句话描述研究问题"
+  target_metric: "f1"                     # 可选: accuracy, f1, bleu, rouge-l, em 等
+  target_value: 0.88
+  confidence_threshold: 0.01
+
+decision_thresholds:
+  upgrade_threshold: 0.01
+  stagnation_threshold: 0.005
+  neutral_threshold: 0.003
+
+key_variables:
+  - name: model_size
+    values: ["base", "large"]
+    description: "预训练模型规模"
+    config_path: "model.size"
+  - name: max_seq_length
+    values: [128, 256, 512]
+    description: "最大序列长度"
+    config_path: "data.max_seq_length"
+  - name: learning_rate
+    values: [1e-5, 2e-5, 5e-5]
+    description: "微调学习率"
+    config_path: "training.learning_rate"
+
+experiment_tiers:
+  quick_screen:
+    num_epochs: 3
+    timeout_minutes: 20
+    description: "快速筛选 - 3 epochs 判断方向"
+  deep_verify:
+    num_epochs: 10
+    timeout_minutes: 60
+    description: "深度验证 - 10 epochs 充分验证"
+  full_run:
+    num_epochs: 20
+    timeout_minutes: 120
+    description: "完整运行 - 20 epochs + 多种子"
+
+baselines:
+  - method: BERT-base
+    config: configs/bert_base.yaml
+    script: scripts/run_nlp.py
+    metrics:
+      f1: 0.84
+      accuracy: 0.86
+    source: "本地实测 (seed=42)"
+  - method: RoBERTa-base
+    config: configs/roberta_base.yaml
+    script: scripts/run_nlp.py
+    metrics:
+      f1: 0.86
+      accuracy: 0.88
+    source: "本地实测 (seed=42)"
+
+methods:
+  bert_base:
+    script: scripts/run_nlp.py
+    config: configs/bert_base.yaml
+  roberta_base:
+    script: scripts/run_nlp.py
+    config: configs/roberta_base.yaml
+  proposed:
+    script: scripts/run_nlp.py
+    config: configs/proposed.yaml
+
+budget:
+  max_experiments_per_batch: 10
+  max_hours_per_batch: 6
+  max_total_experiments: 100
+  max_consecutive_failures: 2
+  cooldown_after_regression: 1
+  cooldown_experiment_cap: 4
+
+loop:
+  mode: closed
+  auto_continue: false
+  trigger: manual
+  open_slot_ratio: 0.2
+
+experiment_runner:
+  env_setup: "conda activate nlp_env"
+  run_command: "python scripts/run_nlp.py --exp-id {exp_id} --method {method} --epochs {rounds} --seed {seed} --override {overrides}"
+  result_path: "experiments/results/{exp_id}.json"
+  log_path: "experiments/results/{exp_id}.log"
+  result_parser: "json"
+  parallelism: "serial"
+  timeout:
+    quick_screen: 20
+    deep_verify: 60
+    full_run: 120
+
+literature_references:
+  - title: "相关NLP论文"
+    authors: "作者"
+    venue: "ACL 2025"
+    key_technique: "核心技术"
+    code_url: "https://github.com/..."
+
+innovation_sources:
+  priority:
+    - level: 1
+      name: "本地资源"
+      sources: ["DEEP_RESEARCH_*.md", "docs/"]
+    - level: 2
+      name: "网络搜索"
+      sources: ["ACL", "EMNLP", "NAACL", "NeurIPS", "ICLR"]
+    - level: 3
+      name: "交叉融合"
+      sources: ["Prompt工程 + 微调", "多任务学习迁移"]

@@ -1,0 +1,111 @@
+# 示例：NLP 情感分析研究
+# 展示如何用 auto-research 驱动 NLP 实验（非 ML 训练循环也适用）
+
+domain:
+  name: "多模态情感分析-缺失模态鲁棒性"
+  description: "研究在文本/音频/视觉模态部分缺失时的情感分析鲁棒方法"
+  target_metric: "weighted_f1"
+  target_value: 0.82
+  confidence_threshold: 0.01
+
+decision_thresholds:
+  upgrade_threshold: 0.01
+  stagnation_threshold: 0.005
+  neutral_threshold: 0.003
+
+key_variables:
+  - name: missing_modality
+    values: ["text_only", "audio_only", "visual_only", "random_50%"]
+    description: "缺失模态类型"
+    config_path: "data.missing_modality"
+  - name: fusion_strategy
+    values: ["early", "late", "attention", "cross_modal"]
+    description: "融合策略"
+    config_path: "model.fusion_strategy"
+
+experiment_tiers:
+  quick_screen:
+    num_epochs: 5
+    timeout_minutes: 15
+    description: "快速筛选 - 5 epochs"
+  deep_verify:
+    num_epochs: 15
+    timeout_minutes: 45
+    description: "深度验证 - 15 epochs"
+  full_run:
+    num_epochs: 30
+    timeout_minutes: 90
+    description: "完整运行 - 30 epochs + 多种子"
+
+baselines:
+  - method: MulT
+    config: configs/mult.yaml
+    script: scripts/run_sentiment.py
+    metrics:
+      weighted_f1: 0.78
+    source: "本地实测 (seed=42, CMU-MOSEI)"
+  - method: MISA
+    config: configs/misa.yaml
+    script: scripts/run_sentiment.py
+    metrics:
+      weighted_f1: 0.80
+    source: "本地实测 (seed=42, CMU-MOSEI)"
+
+methods:
+  mult:
+    script: scripts/run_sentiment.py
+    config: configs/mult.yaml
+  misa:
+    script: scripts/run_sentiment.py
+    config: configs/misa.yaml
+  proposed:
+    script: scripts/run_sentiment.py
+    config: configs/proposed.yaml
+
+budget:
+  max_experiments_per_batch: 12
+  max_hours_per_batch: 6
+  max_total_experiments: 150
+  max_consecutive_failures: 2
+  cooldown_after_regression: 1
+  cooldown_experiment_cap: 4
+
+loop:
+  mode: closed
+  auto_continue: false
+  trigger: manual
+  open_slot_ratio: 0.2
+
+experiment_runner:
+  env_setup: "conda activate sentiment"
+  run_command: "python scripts/run_sentiment.py --exp-id {exp_id} --method {method} --epochs {rounds} --seed {seed} --override {overrides}"
+  result_path: "experiments/results/{exp_id}.json"
+  log_path: "experiments/results/{exp_id}.log"
+  result_parser: "json"
+  parallelism: "parallel:2"    # 2 GPU 并行
+  timeout:
+    quick_screen: 15
+    deep_verify: 45
+    full_run: 90
+
+literature_references:
+  - title: "CorrKD"
+    authors: "Li et al."
+    venue: "CVPR 2024"
+    key_technique: "三重蒸馏机制 (对比+原型+响应解耦)"
+  - title: "MISA"
+    authors: "Hazarika et al."
+    venue: "ACM MM 2020"
+    key_technique: "模态不变与模态特定表示分离"
+
+innovation_sources:
+  priority:
+    - level: 1
+      name: "本地资源"
+      sources: ["docs/", "paper/"]
+    - level: 2
+      name: "网络搜索"
+      sources: ["ACL", "EMNLP", "CVPR", "ACM MM", "AAAI"]
+    - level: 3
+      name: "交叉融合"
+      sources: ["CorrKD蒸馏 + MISA分离表示", "联邦学习聚合策略迁移"]
