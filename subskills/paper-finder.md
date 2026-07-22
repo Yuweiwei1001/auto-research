@@ -184,5 +184,44 @@ When invoked from the auto-research loop (Phase 1):
 
 1. **Search**: Run parallel web searches, present ranked list (title, venue, year, citations, one-line description)
 2. **Record**: Add papers to memory-bank.md, update mind-graph.md, write references.bib
-3. **Ask**: Whether user wants deeper analysis of any specific papers
-4. **Connect**: If running within auto-research, map findings to actionable hypotheses
+3. **Output**: 生成结果文件到 `outputs/{YYYYMMDD}_paper-finder_{slug}.md`（包含调研报告）
+4. **Ask**: Whether user wants deeper analysis of any specific papers
+5. **Connect**: If running within auto-research, map findings to actionable hypotheses
+
+## 结果输出（必须）
+
+每次调用完成后，必须在项目根目录 `outputs/` 下生成结果文件：
+
+- **路径**：`outputs/{YYYYMMDD}_paper-finder_{slug}.md`
+- **slug**：从搜索主题派生的 kebab-case 短标识
+
+### 调研报告输出格式
+
+```markdown
+# {theme} 研究调研报告
+
+**生成时间**: YYYY-MM-DD
+**搜索范围**: {venues + 年份}
+**发现论文**: {N} 篇（Tier 1: X, Tier 2: Y, Tier 3: Z）
+
+## 研究趋势
+
+{按时间线或技术路线归纳}
+
+## 核心论文（Tier 1）
+
+| # | 论文 | 会议 | 核心技术 | 与当前研究的关系 |
+|---|------|------|---------|---------------|
+
+## 技术 Gap 分析
+
+{当前领域尚未解决的问题 → 可作为假设来源}
+
+## 建议的实验方向
+
+{基于 gap 提出 3-5 个可验证假设}
+
+## 参考文献
+
+{BibTeX 或编号列表}
+```
